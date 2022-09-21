@@ -2,7 +2,6 @@
 
 # Imports
 from datetime import date, datetime, timedelta
-from selenium import webdriver
 import pyautogui, pydirectinput, time, os, shutil
 import numpy as np
 import pandas as pd
@@ -297,8 +296,6 @@ def extractDataCL(date_ini, date_fin, stores_number):
 def extractDataCR(date_ini, stores_number):
     
     # 03CR | Function to Extract Data from Sales by Paym Slip (Carnê)
-    # d - Date Period
-    # n - Stores Number
 
     # Navegar até os filtros
     pyautogui.click(x=50, y=55)
@@ -423,7 +420,7 @@ def dataETL(source_directory, destiny_directory):
                 df.drop(['Unnamed: 1', 'Unnamed: 2', 'Unnamed: 4', 'Unnamed: 6', 'Unnamed: 8', 'Unnamed: 10', 'Unnamed: 12', 'Unnamed: 14', 'Unnamed: 16', 'Unnamed: 18', 'Unnamed: 20', 'Unnamed: 22', 'Unnamed: 27'], inplace=True, axis=1)
 
                 # Rename the Columns
-                df.columns = ['Filial', 'Vendedor', 'Venda', 'CFE', 'Cliente', 'CPF_Cliente', 'Id_Item', 'Desc_Item', 'Familia_Item', 'Emissao', 'Campanha', 'Quant', 'Vlr_Compra_Unit', 'Valor_Bruto', 'Valor_Liquido']
+                df.columns = ['Filial', 'Vendedor', 'Venda', 'CFE', 'Cliente', 'CPF_Cliente', 'Id_Item', 'Desc_Item', 'Familia_Item', 'Emissao', 'Campanha', 'Quant', 'Vlr_Compra_Unit', 'Vlr_Custo_Unit', 'Valor_Bruto', 'Valor_Liquido']
 
                 # Delete unnecessary lines
                 df = df.drop([0, 1, 2])
@@ -450,6 +447,11 @@ def dataETL(source_directory, destiny_directory):
                 df['Vlr_Compra_Unit'] = df['Vlr_Compra_Unit'].str.replace('.', '')
                 df['Vlr_Compra_Unit'] = df['Vlr_Compra_Unit'].str.replace(',', '.')
                 df['Vlr_Compra_Unit'] = df['Vlr_Compra_Unit'].astype(float)
+
+                df['Vlr_Custo_Unit'] = df['Vlr_Custo_Unit'].str.slice(start=3)
+                df['Vlr_Custo_Unit'] = df['Vlr_Custo_Unit'].str.replace('.', '')
+                df['Vlr_Custo_Unit'] = df['Vlr_Custo_Unit'].str.replace(',', '.')
+                df['Vlr_Custo_Unit'] = df['Vlr_Custo_Unit'].astype(float)
 
                 df['Valor_Bruto'] = df['Valor_Bruto'].str.slice(start=3)
                 df['Valor_Bruto'] = df['Valor_Bruto'].str.replace('.', '')
@@ -509,6 +511,9 @@ def dataETL(source_directory, destiny_directory):
 
                 df = pd.read_excel(source_directory + file)
 
+                # Delete unnecessary columns
+                df.drop(df.columns[[10]], inplace=True, axis=1)
+
                 # Rename the Columns
                 df.columns = ['Filial', 'N_Doc', 'Emissao', 'Pagamento', 'Recebimento', 'Vencimento', 'Valor', 'ID_Cliente', 'Cad_Pessoa', 'Tipo_Crediario']
 
@@ -545,11 +550,14 @@ def dataETL(source_directory, destiny_directory):
                 df.drop(indexNames, inplace=True)
 
                 df = df.fillna(method='ffill')
-                df.drop(['Empresa', 'NF: número', 'Unnamed: 2', 'Unnamed: 4', 'Unnamed: 6', 'Unnamed: 8', 'Unnamed: 10', 'Unnamed: 12', 'Unnamed: 14', 'Unnamed: 16', 'Unnamed: 18', 'Unnamed: 20', 'Unnamed: 22', 'Unnamed: 24', 'Unnamed: 26', 'Unnamed: 28', 'Unnamed: 30', 'Unnamed: 32', 'Unnamed: 34', 'Unnamed: 36', 'Unnamed: 37'], inplace=True, axis=1)
+                df.drop(['Empresa', 'Unnamed: 2', 'Unnamed: 4', 'Unnamed: 6', 'Unnamed: 8', 'Unnamed: 10', 'Unnamed: 12', 'Unnamed: 14', 'Unnamed: 16', 'Unnamed: 18', 'Unnamed: 20', 'Unnamed: 22', 'Unnamed: 24', 'Unnamed: 26', 'Unnamed: 28', 'Unnamed: 30', 'Unnamed: 32', 'Unnamed: 34', 'Unnamed: 36', 'Unnamed: 37'], inplace=True, axis=1)
                 df = df.drop([0, 1, 2])
-                df.columns = ['Filial', 'Emissao', 'Status', 'Id_Cli', 'Tip_Pes', 'CPF', 'Nome_Cli', 'Data_Nasc', 'Fone', 'E-mail', 'Cep', 'Endereco', 'Bairro', 'Cidade', 'Estado', 'Data_Cad', 'Sexo']
+                df.columns = ['Filial', 'Num_CFe', 'Emissao', 'Status', 'Id_Cli', 'Tip_Pes', 'CPF', 'Nome_Cli', 'Data_Nasc', 'Fone', 'E-mail', 'Cep', 'Endereco', 'Bairro', 'Cidade', 'Estado', 'Data_Cad', 'Sexo']
 
                 df['Emissao'] = df['Emissao'].str[6:] + df['Emissao'].str[3:5] + df['Emissao'].str[:2]
+
+                df['Num_CFe'] = df['Num_CFe'].astype(str)
+                df['Num_CFe'] = df['Num_CFe'].str.slice(start=0, stop=-2)
 
                 df['Id_Cli'] = df['Id_Cli'].astype(str)
                 df['Id_Cli'] = df['Id_Cli'].str.slice(start=0, stop=-2)
@@ -569,6 +577,8 @@ def dataETL(source_directory, destiny_directory):
                 df['E-mail'] = df['E-mail'].str.lower()
                 df['E-mail'] = df['E-mail'].str.strip()
 
+                df['Cep'] = df['Cep'].astype(str)
+                df['Cep'] = df['Cep'].str.slice(start=0, stop=-2)
                 df['Cep'] = df['Cep'].replace('        ', np.nan)
 
                 df['Endereco'] = df['Endereco'].astype(str)
@@ -608,7 +618,7 @@ def dataETL(source_directory, destiny_directory):
                 df['Tipo_Cliente'] = np.nan
                 df['Filial_Origem'] = np.nan
 
-                df = df[['Status', 'Id_Cli', 'Tip_Pes', 'CPF', 'CNPJ', 'Nome_Cli', 'Data_Nasc', 'Dia_Nasc', 'Mes_Nasc', 'Fone', 'Celular', 'E-mail', 'Cep', 'Rua' ,'Numero', 'Complemento', 'Endereco', 'Bairro', 'Cidade', 'Estado', 'Pais', 'Sexo', 'Data_Cad', 'Primeira_Compra', 'Ultima_Compra', 'Tipo_Cliente', 'Filial_Origem', 'Filial', 'Emissao']]
+                df = df[['Status', 'Id_Cli', 'Tip_Pes', 'CPF', 'CNPJ', 'Nome_Cli', 'Data_Nasc', 'Dia_Nasc', 'Mes_Nasc', 'Fone', 'Celular', 'E-mail', 'Cep', 'Rua' ,'Numero', 'Complemento', 'Endereco', 'Bairro', 'Cidade', 'Estado', 'Pais', 'Sexo', 'Data_Cad', 'Primeira_Compra', 'Ultima_Compra', 'Tipo_Cliente', 'Filial_Origem', 'Filial', 'Emissao', 'Num_CFe']]
 
                 df = df.sort_values(by='Id_Cli')
 
