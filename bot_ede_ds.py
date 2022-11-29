@@ -1,5 +1,6 @@
-# Bot EDE - ERP Data Extract - Daily Sales
-
+############################################################################################################################
+# # Bot EDE - ERP Data Extract - Daily Sales
+############################################################################################################################
 # Imports
 from datetime import date, datetime, timedelta
 import pyautogui, pydirectinput, time, os, shutil
@@ -24,18 +25,18 @@ date_fin = str(dtf)[8:10] + str(dtf)[5:7] + str(dtf)[0:4]
 
 # Files Name Definition
 file_name = str(dti)[0:4] + str(dti)[5:7] + str(dti)[8:10] + "-" + str(dti)[11:13] + str(dti)[14:16]
-file_name_pd = file_name + "-01PD.XLS" # Vendas por Produto
-file_name_fp = file_name + "-02FP.XLS" # Vendas por Forma de Pagamento
-file_name_cr = file_name + "-03CR.XLS" # Vendas por Tipo de Carnê
-file_name_cl = file_name + "-04CL.XLS" # Cadastro de Clientes
+file_name_pd = file_name + "-01PD.XLS" # Sales by Product
+file_name_fp = file_name + "-02FP.XLS" # Sales by Payment Method
+file_name_cr = file_name + "-03CR.XLS" # Sales in Carnet
+file_name_cl = file_name + "-04CL.XLS" # Customer Base
 
 # Softwares Paths Definition
-sys_adm = 'D:/RPA/ERP/CEVidal-Admin.rdp' # Modulo Admin ERP
-sys_fin = 'D:/RPA/ERP/CEVidal-Financeiro.rdp' # Modulo Financeiro ERP
-sys_res = 'D:/RPA/ERP/Reiniciar.rdp' # Botão para Reiniciar o ERP
+sys_adm = 'D:/RPA/ERP/CEVidal-Admin.rdp' # ERP Admin Module
+sys_fin = 'D:/RPA/ERP/CEVidal-Financeiro.rdp' # ERP Financial Module
+sys_res = 'D:/RPA/ERP/Reiniciar.rdp' # Button to Restart the ERP
 
 # Directories Definition
-sourc_file = 'C:/Dataweb/' # Fonte de Arquivos (Onde o ERP exporta os Arquivos)
+sourc_file = 'C:/Dataweb/'
 input_pend = 'D:/RPA/ETL/INPUT/01_PENDING/'
 input_done = 'D:/RPA/ETL/INPUT/02_DONE/'
 output_pend = 'D:/RPA/ETL/OUTPUT/01_PENDING/'
@@ -55,6 +56,7 @@ stores_number = 13
 def loginSystem(username, password, system_path, system_module):
     
     # Function to System Login    
+
     pyautogui.hotkey("win", "m")
     os.system('start ' + system_path)
     time.sleep(60)
@@ -296,6 +298,8 @@ def extractDataCL(date_ini, date_fin, stores_number):
 def extractDataCR(date_ini, stores_number):
     
     # 03CR | Function to Extract Data from Sales by Paym Slip (Carnê)
+    # d - Date Period
+    # n - Stores Number
 
     # Navegar até os filtros
     pyautogui.click(x=50, y=55)
@@ -372,6 +376,7 @@ def extractDataCR(date_ini, stores_number):
 def renameFiles(source_directory, file_name):
     
     # Function to Rename Files
+
     for file in os.listdir(source_directory):
 
         if "01pd_" in file or "01PD_" in file:
@@ -389,7 +394,8 @@ def renameFiles(source_directory, file_name):
 ############################################################################################################################
 def orgFiles(source_directory, destiny_directory, move_or_copy):
     
-    # Function to Move or Copy Files    
+    # Function to Move or Copy Files
+    
     for file in os.listdir(source_directory):
         if '.XLS' in file or '.xls' in file or '.CSV' in file or '.csv' in file:
             if move_or_copy == 'move':
@@ -398,9 +404,23 @@ def orgFiles(source_directory, destiny_directory, move_or_copy):
                 shutil.copy(source_directory + file, destiny_directory + file)
 
 ############################################################################################################################
+def mkDir(destiny_directory):
+
+    # Function to create Month and Year folders
+
+    if not os.path.isdir(destiny_directory + str(datetime.today())[0:4]):
+
+        os.mkdir(destiny_directory + str(datetime.today())[0:4])
+
+    if not os.path.isdir(destiny_directory + str(datetime.today())[0:4] + '/' + str(datetime.today())[5:7]):
+
+        os.mkdir(destiny_directory + str(datetime.today())[0:4] + '/' + str(datetime.today())[5:7])
+
+############################################################################################################################
 def clearDirectories(source_directory):
 
     # Function to Clear Directories
+
     for file in os.listdir(source_directory):
         if ".XLS" in file or ".xls" in file or ".CSV" in file or ".csv" in file or ".XML" in file or ".xml" in file:            
             os.unlink(source_directory + file)
@@ -444,22 +464,22 @@ def dataETL(source_directory, destiny_directory):
 
                 # Converting values from portuguese to float
                 df['Vlr_Compra_Unit'] = df['Vlr_Compra_Unit'].str.slice(start=3)
-                df['Vlr_Compra_Unit'] = df['Vlr_Compra_Unit'].str.replace('.', '')
+                df['Vlr_Compra_Unit'] = df['Vlr_Compra_Unit'].str.replace(r'.', '', regex=True)
                 df['Vlr_Compra_Unit'] = df['Vlr_Compra_Unit'].str.replace(',', '.')
                 df['Vlr_Compra_Unit'] = df['Vlr_Compra_Unit'].astype(float)
 
                 df['Vlr_Custo_Unit'] = df['Vlr_Custo_Unit'].str.slice(start=3)
-                df['Vlr_Custo_Unit'] = df['Vlr_Custo_Unit'].str.replace('.', '')
+                df['Vlr_Custo_Unit'] = df['Vlr_Custo_Unit'].str.replace(r'.', '', regex=True)
                 df['Vlr_Custo_Unit'] = df['Vlr_Custo_Unit'].str.replace(',', '.')
                 df['Vlr_Custo_Unit'] = df['Vlr_Custo_Unit'].astype(float)
 
                 df['Valor_Bruto'] = df['Valor_Bruto'].str.slice(start=3)
-                df['Valor_Bruto'] = df['Valor_Bruto'].str.replace('.', '')
+                df['Valor_Bruto'] = df['Valor_Bruto'].str.replace(r'.', '', regex=True)
                 df['Valor_Bruto'] = df['Valor_Bruto'].str.replace(',', '.')
                 df['Valor_Bruto'] = df['Valor_Bruto'].astype(float)
 
                 df['Valor_Liquido'] = df['Valor_Liquido'].str.slice(start=3)
-                df['Valor_Liquido'] = df['Valor_Liquido'].str.replace('.', '')
+                df['Valor_Liquido'] = df['Valor_Liquido'].str.replace(r'.', '', regex=True)
                 df['Valor_Liquido'] = df['Valor_Liquido'].str.replace(',', '.')
                 df['Valor_Liquido'] = df['Valor_Liquido'].astype(float)
 
@@ -512,7 +532,8 @@ def dataETL(source_directory, destiny_directory):
                 df = pd.read_excel(source_directory + file)
 
                 # Delete unnecessary columns
-                df.drop(df.columns[[10]], inplace=True, axis=1)
+                if set([10]).issubset(df.columns):
+                    df.drop(df.columns[[10]], inplace=True, axis=1)
 
                 # Rename the Columns
                 df.columns = ['Filial', 'N_Doc', 'Emissao', 'Pagamento', 'Recebimento', 'Vencimento', 'Valor', 'ID_Cliente', 'Cad_Pessoa', 'Tipo_Crediario']
@@ -637,6 +658,8 @@ def processA():
     clearDirectories(input_pend)
     clearDirectories(output_pend)
     clearDirectories(output_app)
+    mkDir(input_done)
+    mkDir(output_done)
 
     counter = 0
     files_number = 0
@@ -681,7 +704,6 @@ def processB():
     os.system('start ' + sys_res)
 
     counter = 0
-
     for file in os.listdir(sourc_file):
         if ".XLS" in file or ".xls" in file:
             counter = counter + 1
@@ -697,12 +719,11 @@ def processC():
 
     orgFiles(sourc_file, input_pend, 'move')
     dataETL(input_pend, output_pend)
-    orgFiles(input_pend, input_done, 'move')
+    orgFiles(input_pend, input_done + str(datetime.today())[0:4] + '/' + str(datetime.today())[5:7] + '/', 'move')
     orgFiles(output_pend, output_app, 'copy')
-    orgFiles(output_pend, output_done, 'move')
+    orgFiles(output_pend, output_done + str(datetime.today())[0:4] + '/' + str(datetime.today())[5:7] + '/', 'move')
 
     counter = 0
-
     for file in os.listdir(output_app):
         if ".CSV" in file or ".csv" in file:
             counter = counter + 1
